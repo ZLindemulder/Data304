@@ -1,5 +1,8 @@
 ---
 title: "hw5"
 format: html
+output-file: "index"
 ---
+
+![THIS... is an elephant.](https://quarto.org/docs/authoring/elephant.png){width=40%}
 
