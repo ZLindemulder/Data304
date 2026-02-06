@@ -1,7 +1,7 @@
 ---
 format: 
   html
-  title: "Zach Graphs"
+  title: "Zachary Lindemulder's Data304 Portfolio"
   output-file: "index.html"
 embed-resources: true
 ---
