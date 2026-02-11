@@ -3,6 +3,80 @@ title: "hw5"
 format: html
 output-file: "index"
 ---
+```{r}
+library(vegawidget)
+```
+## Exercise 2
+A.
 
 ![THIS... is an elephant.](https://quarto.org/docs/authoring/elephant.png){width=40%}
+
+
+B. I could see 2 arguments, first it is a collection of line marks, the second is you could argue this is a very fancy text mark, because how different graphic wise is an image and a letter. There is also the text description which is definitely a text mark. This graphic doesn't really have any variables mapped, it is a collection of lines that is meant to create a pattern we recognize as an elephant.
+
+C. The story is the showcase of what an elephant looks like.
+
+D. It successfully evokes a connotation with elephants immediately when we look at it.
+
+E. I already know how to add the text mark into the graphic.
+
+F. Yes, without having any clear idea of how data is mapped, I do not know how to create line mark segments (except if you created a data set with enough points of purely x,y data that it blends into a line when you see it visualized).
+
+## Exercise 3
+
+#### graphic 1:
+
+```{r}
+'
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Seattle Weather by month",
+  "data": {"url": "https://calvin-data304.netlify.app/data/weather-with-dates.csv"},
+  "mark": "line",
+  "width": "800",
+  "title": "Mean max Temparture in Seatle by Month",
+  "encoding": { 
+    "x": {"field": "month", "type": "temporal", "axis": {"labelAngle": 0, "format": "%B"}},
+    "y": {"field": "temp_max", "type": "quantitative", "aggregate": "mean", "title": "mean max temp"},
+    "color": {"field": "year"}
+  }
+}' |> as_vegaspec()
+```
+
+For this graph I have chosen to display 12 months since I have separated the years by color, you could recreate this graph using the full date column and end up with 48 months (12 months x 4 years of data) and 1 long line.
+
+#### graphic 2:
+
+```{r}
+'
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "description": "Seattle Weather by month",
+  "data": {"url": "https://calvin-data304.netlify.app/data/weather-with-dates.csv"},
+  "mark": "bar",
+  "width": "800",
+  "title": "Weather Types by Month in Seattle, WA Over 4 Years",
+  "encoding": { 
+    "x": {
+      "field": "month", 
+      "type": "nominal", 
+      "timeUnit": "month",
+      "axis": {"labelAngle": 0, "format": "%B"}
+    },
+    "xOffset": {"field":"weather"},
+    "detail": {"field": "year"},
+    "y": {
+      "field": "weather", 
+      "type": "quantitative", 
+      "aggregate": "count", 
+      "title": "# of Days"
+    },
+    "color": {"field": "weather"}
+  }
+}' |> as_vegaspec()
+```
+
+The graphic here shows that the sunniest month in Seattle over these 4 years is August and the Rainiest month is December.
+
+
 
