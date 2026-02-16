@@ -1,0 +1,122 @@
+---
+title: "hw6"
+format: html
+output-file: "index"
+---
+
+```{r}
+library(vegawidget)
+```
+
+## Exercise 1
+
+#### A.
+
+I think the most valuable outtake from this chapter is Tufte's advince that simple linear data is not worth graphing since it can be understood just as well if it was text. This really puts into words the need for more complexity in my graphics (even if it is a bit harder to understand at 1 glance).
+
+#### B.
+
+![3 layers of time series in 1 graphic (pg 31)](HW6Graphic.png){width=40%}
+
+- I picked this graph for a variety of reasons. First, even through it is very data dense it is still very readable and second, it feels like something I could make a version of with the skills I have learned so far(wouldn't be an exact copy).
+
+- X axis: time
+
+  y axis: money (price/earnings)
+  
+  line mark: (data) weekly wages
+  
+  vertical bar mark: (data) Price of a quarter of wheat
+  
+  horizontal bar mark: Ruler of England (offset each ruler)
+  
+  text mark: century
+
+- The fading bar mark
+
+  aesthetic arcs for each century
+  
+  round and fancy title plate
+
+- The point Tufte is making with this graph is time on its own often does not provide the causal relationship that make graphics great as a tool to deliver information, but they can still be used effectively if many variables are included and together they can all tell a cohesive story.
+
+## Exercise 2
+
+1 thing that I learned in this reading and will change how I make my graphics is thinking more about where the reader will pay attention to. I feel like I often think of cool ideas of how to visualize something only to later (when I am no longer as familier with the data) look at it and get confused because my cool idea doesn't translate well to a reader who is not already familier with the data. Another thing I will put into practice from this reading is creating a visualization library (and not just for this class). This will help me get ideas of how to visualize data and stop my self from falling into the same pitfalls multiple times in a row.
+
+## Exercise 3
+
+Step 1: Bar mark does not go down to 0.
+
+        Both response rate and completion rate are percents so they shouldn't need both a right and left y axis.
+        
+        The color choices make the labels hard to read when they clip.
+        
+Step 2: Set bar mark origin to be 0%
+
+        Set both variables to use the same Y axis so they didn't have to be labeled
+
+Step 3:
+```{r}
+'
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "data":
+    { "values" :
+        [{"Date":"Q1-2017","Completion Rate":0.91,"Response Rate":0.023},
+        {"Date":"Q2-2017","Completion Rate":0.93,"Response Rate":0.018},
+        {"Date":"Q3-2017","Completion Rate":0.91,"Response Rate":0.028},
+        {"Date":"Q4-2017","Completion Rate":0.89,"Response Rate":0.023},
+        {"Date":"Q1-2018","Completion Rate":0.84,"Response Rate":0.034},
+        {"Date":"Q2-2018","Completion Rate":0.88,"Response Rate":0.027},
+        {"Date":"Q3-2018","Completion Rate":0.91,"Response Rate":0.026},
+        {"Date":"Q4-2018","Completion Rate":0.87,"Response Rate":0.039},
+        {"Date":"Q1-2019","Completion Rate":0.83,"Response Rate":0.028}] 
+    },
+    "width": "500",
+    "encoding": {
+      "x":{
+        "field":"Date", 
+        "type":"nominal", 
+        "axis": {"labelAngle": 45}
+        }
+    },
+  "layer": [
+    {"mark": {
+      "type": "bar", 
+      "width": 25
+      },
+    "encoding": {
+      "y": {
+        "field":"Completion Rate", 
+        "type": "quantitative"
+        }
+    }
+    },
+    {"mark": { 
+      "type": "line", 
+      "point": true
+      },
+    "encoding": {
+      "y": {
+        "field": "Response Rate", 
+        "type": "quantitative"
+        },
+      "color": {"value": "red"}
+    }
+    }
+  ]
+}
+
+' |> as_vegaspec()
+```
+
+#### A
+
+Layers used: bar mark, line mark
+
+#### B
+
+I implemented Tufte's idea of using many layers of data, Knaflic's rule of always having a 0 base on bar graphs, and Knaflic's suggestion to think closely about how the reader will percieve the graphic.
+
+  
