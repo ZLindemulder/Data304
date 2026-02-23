@@ -1,0 +1,218 @@
+---
+title: "hw7"
+format: html
+output-file: "index.html"
+---
+
+
+## Exercise 1
+
+#### a.
+
+Swap X and Y axis so labels don't take as much vertical space. If bar categories are unordered then order them in ascending or descending order. Grouped bar charts should only be used if your primary interest is the differences between groups not the values of each group. Stacked bar charts are useful when the total of all groups is of interest.
+
+#### b.
+
+They aren't good if it is either impractical to have the base be 0 or if by setting the base to 0 you lose out on detail
+
+#### c.
+
+scatter plots and heat maps
+
+#### d.
+
+if the sum of the stack is useful information you want to say then stack them, if not dodge them or facet
+
+#### e.
+
+```{r}
+library(dplyr)
+library(vegabrite)
+library(jsonlite)
+```
+
+```{r}
+Edata <- read.csv('cow-movies.csv')
+vbe <- vl_chart() |>
+  vl_add_data(Edata) |>
+  vl_mark_bar() |>
+  vl_encode_x(field = "amount",
+              type = "quantitative",
+              title = "Weekend Gross (Million USD)") |>
+  vl_encode_y(field ="title_short",
+              type = "nominal",
+              sort = "amount",
+              title = "")
+  vbe
+```
+#### f
+```{r}
+fdata <- read.csv('cow-income.csv')
+clean_fdata <- fdata |> filter(race == "asian" | race == "white" | race == "black" | race == "hispanic")
+vbfd <- vl_chart() |>
+  #vl_filter(filter = "race = all") |>
+  vl_add_data(clean_fdata) |>
+  vl_mark_bar() |>
+  vl_encode_y(field = "median_income",
+              type = "quantitative",
+              title = "Median Income (USD)") |>
+  vl_encode_x(field = "race",
+              type = "nominal") |>
+  vl_axis_x(labelAngle = 0) |>
+  vl_encode_xOffset(field = "age",
+                    type = "nominal") |>
+  vl_encode_color(field = "age",
+                  type = "nominal",
+                  title = "age (yrs)") |>
+  vl_scale_color(scheme = "viridis")
+vbfd
+```
+```{R}
+hw7f2 <- vl_chart() |>
+  vl_add_data(clean_fdata) |>
+  vl_mark_bar() |>
+  vl_encode_y(field = "median_income",
+              type = "quantitative",
+              title = "Median Income (USD)"
+              ) |>
+  vl_encode_x(field = "age",
+              type = "nominal") |>
+  vl_axis_x(labelAngle = 0) |>
+  vl_add_properties(width = 300) |>
+  vl_facet(field = "race")
+
+hw7f2
+```
+
+#### g
+
+```{r}
+hw7gData <- read.csv("cow-gapminder(1).csv")
+clean_hw7gData <- hw7gData |>
+  filter(continent == "Americas" & year == "2007")
+```
+```{r}
+hw7g <- vl_chart() |>
+  vl_add_data(clean_hw7gData)|>
+  vl_mark_point(filled = TRUE) |>
+  vl_encode_x(field = "lifeExp",
+              type = "quantitative",
+              title = "life expectancy(years)") |>
+  vl_scale_x(domainMin = "60") |>
+  vl_encode_y(field = "country",
+              type = "nominal",
+              title = "") |>
+  vl_sort_y_by_encoding(encoding = "x",
+                        order = "descending") |>
+  vl_axis_y(grid = TRUE) |>
+  vl_encode_color(value = "blue")
+hw7g
+```
+
+Figure 6.12 is labeled bad because, since it is a bar graph and has to start the at 0, it limits the ability for the graph to show the differences between countries life expectancies since the eye is not drawn to the ends of the bars but the middle. 6.13 is bad because the countries are unsorted and therefore it is harder to read and is generally more of a mess of points rather than a graphic that shows a trend.
+
+## Exercise 2
+
+### b.
+
+When you get rid of chart junk you risk getting rid of so many things your chart becomes misleading, When making graphs with solid colors use bordering to your advantage to show differing values (it is easier to tell shades apart if they border each other than if they are separated by white), use the baseline your audience expects
+
+#### c.
+
+Marcy's graphical train schedule, Napoleon's Retreat from Moscow
+
+## Exercise 3
+
+#### a.
+
+A heat map is a graphic using the bar mark in which both the x and y axis variables are non-continuous.
+
+#### b.
+
+```{r}
+hw7_3b_Data <- read.csv("cow-internet2.csv")
+hw7_3b_Data_clean <- hw7_3b_Data |>
+  filter(year >= "1994")
+```
+```{r}
+hw7_3b_graphic <- vl_chart() |>
+  vl_add_data(hw7_3b_Data_clean) |>
+  vl_calculate(calculate = "datum.year == '2016' ? datum.users : 0",
+               as = "sorted_year") |>
+  vl_mark_bar() |>
+  vl_encode_x(field = "year",
+              type = "nominal",
+              title = "") |>
+  vl_encode_y(field = "country",
+              type = "nominal",
+              sort = list(field = "sorted_year", 
+              op = "max", 
+              order = "descending"),
+              title = "",
+              axis = list(orient = "right")) |>
+  vl_encode_color(field = "users",
+                  type = "quantitative",
+                  title = "internet users / 100 people") |>
+  vl_scale_color(scheme = "magma")
+hw7_3b_graphic
+```
+
+#### c. 
+
+Because of optical illusions heat maps may trick people into thinking 2 squares are separate colors instead of what they are(same color), if they are surrounded by other colors of differing brightness.
+
+#### d.
+
+The show pony example is fine because the point of the graphic is not to see the individual points, it is to see the overall trend is mortality rather than what the mortality was in 1 month of 1 year. The issues very much could be a problem in my graphic from part D. It is likely mitigated by the fact that there are white areas around the squares making our minds think of the colors as individual things as opposed to in comparison to the ones around them but even then we run into the issue of the human mind not being able to make our different shades that are close if there is white separating them.
+
+## Exercise 4
+
+#### a.
+
+They are not as good at showing the differences between sections as bar graphs.
+
+#### b.
+
+Wilke things that pie charts are a legitimate tool that is useful depending on the story your are trying to tell with your graphic. For example they are great if you are trying to show relation to a simple fraction such as who has the majority in a governing body
+
+#### c.
+
+Wilke compares pie charts to stacked and side by side bar graphs. He prefers stacked graphs if you have a large set of data or if you need to make many visualizations such as proportion over time. He prefers side by side bar graphs when you need to show relative proportions or if you need to break up the data in some way.
+
+#### d.
+
+```{r}
+hw7_4d_data <- tribble(
+  ~party, ~seats,
+  "CDU/CSU", 243,
+  "SPD", 214,
+  "FDP", 39
+)
+```
+```{r}
+pie <- vl_chart()|>
+  vl_mark_arc(radius = 80)|>
+  vl_encode_color(field = "party",
+                  type = "nominal",
+                  scale = list(range = c("darkgrey", "yellow", "red")),
+                  legend = NULL) |>
+  vl_encode_order(field = "seats", type = "quantitative", sort = "ascending")
+
+textgraph <- vl_chart() |>
+  vl_mark_text(radius = 50) |>
+  vl_encode_text(field = "seats",
+                 type = "nominal") |>
+  vl_encode_order(field = "seats", type = "quantitative", sort = "ascending")
+
+textParty <- vl_chart() |>
+  vl_mark_text(radius = 110) |>
+  vl_encode_text(field = "party",
+                 type = "nominal") |>
+  vl_encode_order(field = "seats", type = "quantitative", sort = "ascending")
+
+hw7_4d_graphic <- vl_layer(pie, textgraph, textParty) |>
+  vl_add_data(hw7_4d_data) |>
+  vl_encode_theta( field = "seats", stack = TRUE)
+
+hw7_4d_graphic
+```

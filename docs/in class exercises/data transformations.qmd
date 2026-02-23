@@ -1,0 +1,46 @@
+---
+title: "data transformations"
+format: html
+---
+libraries
+```{r}
+library(dplyr)
+library(tidyr)
+library(vegabrite)
+library(jsonlite)
+library(pander)
+```
+
+import data + pivot
+```{r}
+data <- fromJSON('https://cdn.jsdelivr.net/npm/vega-datasets@2.8.0/data/jobs.json')
+data |>
+  pivot_wider(names_from = "job", values_from = "count")
+  head(data)
+```
+
+import data + join
+```{r}
+obesity <- read.csv('obesity.csv')
+prod <- read.csv('elecProd.csv')
+```
+
+```{r}
+newData <- obesity |>
+  inner_join(prod,
+             by= "country")
+```
+
+```{r}
+joinedGraph <- vl_chart() |>
+  vl_add_data(newData) |>
+  vl_mark_point() |>
+  vl_encode_x(field = "obesity",
+              type = "quantitative",
+              ) |>
+  vl_encode_y(field = "elecProd",
+              type = "quantitative",
+              scale = list(type = "symlog")
+  
+joinedGraph
+```
