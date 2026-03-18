@@ -1,0 +1,87 @@
+---
+title: "Final Portfolio"
+format: html
+output-file: "index.html"
+author: "Zachary Lindemulder"
+code-fold: true
+code-tools: true
+---
+
+```{r}
+library(tidyverse)
+library(vegabrite)
+```
+
+## Exercise 1
+
+#### a.
+
+I like submission 2's second graphic. It does a great job at comparing the DNA testing kits and its use of the line mark, even though there is no data between points, works because it helps draw your focus to the differences between genetic share amounts rather than the individual genetic share amounts. This decision also helps when there are converging points since they often do not come from the same area you can see what regions converge by their lines rather than having a bunch of unreadable points
+
+#### b.
+
+I disliked submission 7's second graphic. I get where they were trying to go for with getting as much data on the graphic as possible, but the way they have done it here makes it unreadable for multiple reasons. The most obvious is the overlapping points, which could be fixed by introducing a jitter to the graphic but that ignores another problem. Because they used unique colors for each individual (instead of graduating colors), the reader has to constantly look back to the key to figure out what they are looking at. Which graduating colors the reader could at least know approximately what individual they are looking at, although the best option would be to facet by individual or kit.
+
+#### c1.
+```{r}
+twin_gen <- read.csv("twins-genetics-long.csv")
+
+kit_compare <- vl_chart() |>
+  vl_mark_line(point = TRUE) |>
+  vl_add_data(twin_gen) |>
+  vl_encode_x(field = "kit",
+              type = "nominal",
+              title = "") |>
+  vl_encode_y(field = "genetic.share",
+              type = "quantitative") |>
+  vl_axis_y(format= ".0%",
+            title = "Genetic Share") |>
+  vl_encode_color(field = "region",
+                  type = "nominal") |>
+  vl_facet(columns = 6,
+           field = "twin",
+           type = "nominal",
+           title = "") |>
+  vl_add_properties(title = "Regional Genetic Share in Twins Measured by 6 DNA Test Kits")
+  
+  kit_compare
+```
+#### d1.
+
+When we compare DNA kits across many pairs of twins we find a few interesting trends. First, we see that there can be a wide difference between kits when twins have heritage from Africa or Europe. This is likely due to the fact that while some kits treat some countries as being in NW Europe or West Africa others may label that country as Central Africa or SE Europe.
+
+#### c2.
+```{r}
+pair_out <- twin_gen |> 
+  select(!twin) |>
+  pivot_wider(names_from = "id", values_from = "genetic.share")
+```
+```{r}
+pair_compare_point <- vl_chart() |>
+  vl_add_data(twin_gen) |>
+  vl_mark_point()|>
+  vl_encode_y(field = "genetic.share",
+              type = "quantitative") |>
+  vl_encode_shape(field = "id",
+                  type = "nominal") |>
+  vl_encode_color(field = "id",
+                  type = "nominal")
+pair_compare_rule <- vl_chart() |>
+  vl_add_data(pair_out) |>
+  vl_mark_rule() |>
+  vl_encode_y(field = "A",
+              type = "quantitative") |>
+  vl_encode_y2(field = "B",
+               type = "quantitative")
+
+  
+pair_compare <- vl_layer(pair_compare_point, pair_compare_rule) |>
+  vl_encode_x(field = "region",
+              type = "nominal") |>
+  vl_add_point_selection("CylPair",  fields = c("pair")) |>
+  vl_bind_range_input("CylPair", "pair", min = 1, max = 6, step = 1)
+
+pair_compare
+
+
+```

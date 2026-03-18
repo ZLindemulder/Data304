@@ -3,6 +3,7 @@ title: "hw7"
 format: html
 output-file: "index.html"
 author: "Zachary Lindemulder"
+code-fold: true
 ---
 
 
@@ -154,7 +155,8 @@ hw7_3b_graphic <- vl_chart() |>
   vl_encode_color(field = "users",
                   type = "quantitative",
                   title = "internet users / 100 people") |>
-  vl_scale_color(scheme = "magma")
+  vl_scale_color(scheme = "magma") |>
+  vl_legend_color(orient = "top")
 hw7_3b_graphic
 ```
 
@@ -196,7 +198,7 @@ pie <- vl_chart()|>
   vl_encode_color(field = "party",
                   type = "nominal",
                   scale = list(range = c("darkgrey", "yellow", "red")),
-                  legend = NULL) |>
+                  legend = NA) |>
   vl_encode_order(field = "seats", type = "quantitative", sort = "ascending")
 
 textgraph <- vl_chart() |>

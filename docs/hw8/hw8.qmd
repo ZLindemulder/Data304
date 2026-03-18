@@ -3,5 +3,294 @@ title: "hw8"
 format: html
 output-file: "index.html"
 author: "Zachary Lindemulder"
+code-fold: true
 ---
+```{r}
+library(tidyverse)
+library(vegabrite)
+#lubridate if you need datetime variable instead of char for date
+```
 
+
+## Exercise 1
+
+data import and global transformation(if needed)
+```{r}
+ex1_Data <- read.csv("swd-lets-practice-ex-2-3.csv") |>
+  mutate(capacity = parse_number(capacity)) |>
+  mutate(demand = parse_number(demand)) |>
+  mutate(date = ym(date))
+
+ex1_Data_unmet <- ex1_Data |>
+  mutate(unmet_demand = demand - capacity)
+
+ex1_Data_Long <- ex1_Data |>
+  pivot_longer(!date, names_to = "data", values_to = "amount")
+
+ex1Data_Long_Unmet <- ex1_Data_unmet |>
+  select(date, unmet_demand, capacity) |>
+  pivot_longer(!date, names_to = "what", values_to = "amount")
+```
+start on graphics
+```{r}
+DCNextBar <- vl_chart() |>
+  vl_add_data(ex1_Data_Long) |>
+  vl_mark_bar() |>
+  vl_encode_x(
+    field = "date",
+    type = "ordinal",
+    timeUnit = "yearmonth",
+    title = NA) |>
+  vl_encode_y(
+    field = "amount",
+    type = "quantitative") |>
+  vl_encode_color(field = "data",
+                  sort = "descending") |>
+  vl_encode_xOffset(field = "data",
+                    sort = "descending") |>
+  vl_legend_color(orient = "top",
+                  title = NA) |>
+  vl_add_properties(width = 300)
+#DCNextBar
+```
+```{r}
+DCLine <- vl_chart() |>
+  vl_add_data(ex1_Data_Long) |>
+  vl_mark_line() |>
+  vl_encode_x(
+    field = "date",
+    type = "temporal",
+    title = NA) |>
+  vl_encode_y(
+    field = "amount",
+    type = "quantitative",
+    scale = list(zero = FALSE)) |>
+  vl_encode_color(field = "data",
+                  sort = "descending") |>
+  vl_legend_color(orient = "right",
+                  title = NA) |>
+  vl_add_properties(width = 300)
+#DCLine
+```
+```{r}
+DBar <- vl_chart() |>
+  vl_add_data(ex1_Data) |>
+  vl_mark_bar(size = 10, color = "red") |>
+  vl_encode_x(
+    field = "date",
+    type = "ordinal",
+    timeUnit = "yearmonth",
+    title = NA) |>
+  vl_encode_y(
+    field = "demand",
+    type = "quantitative")
+
+CBar <- vl_chart() |>
+  vl_add_data(ex1_Data) |>
+  vl_mark_bar(color = "green") |>
+  vl_encode_x(
+    field = "date",
+    type = "ordinal",
+    timeUnit = "yearmonth",
+    title = NA) |>
+  vl_encode_y(
+    field = "capacity",
+    type = "quantitative")
+
+
+DCLayerBar <- vl_layer(DBar, CBar) |>
+  vl_add_properties(width = 300)
+#DCLayerBar
+```
+```{r}
+#can not figure out how to switch order of stack
+DUnDBar <- vl_chart() |>
+  vl_add_data(ex1Data_Long_Unmet) |>
+  vl_mark_bar() |>
+  vl_encode_x(
+    field = "date",
+    type = "ordinal",
+    timeUnit = "yearmonth",
+    title = NA) |>
+  vl_encode_y(
+    field = "amount",
+    type = "quantitative",
+    stack = "zero") |>
+  vl_encode_order(field = "what",
+                  sort = "ascending") |>
+  vl_encode_color(
+    field = "what", 
+    scale = list(range = c("green", "yellow", "red"),
+                 domain = c("capacity", "unmet_demand", "demand")), 
+    sort = c("capacity", "unmet_demand")) |>
+  vl_add_properties(width = 300)
+
+DUnDBar
+
+```
+```{r}
+DC_Point <- vl_chart() |>
+  vl_mark_point() |>
+  vl_add_data(ex1_Data_Long)|>
+  vl_encode_x(field = "date",
+              type = "ordinal",
+              timeUnit = "yearmonth") |>
+  vl_encode_y(field = "amount",
+              type = "quantitative") |>
+  vl_encode_color(field = "data",
+                  sort = "descending")
+
+DC_rule <-vl_chart() |>
+  vl_mark_rule() |>
+  vl_add_data(ex1_Data) |>
+  vl_encode_x(field = "date",
+              type = "ordinal",
+              timeUnit = "yearmonth") |>
+  vl_encode_y(field = "capacity",
+              type = "quantitative") |>
+  vl_encode_y2(field = "demand",
+               type = "quantitative")
+
+DC_Complete <- vl_layer(DC_Point, DC_rule) |>
+  vl_add_properties(width = 300)
+#DC_Complete
+
+```
+```{r}
+unmet_demand <- vl_chart() |>
+  vl_add_data(ex1_Data_unmet) |>
+  vl_mark_line(point = TRUE) |>
+  vl_encode_y(field = "unmet_demand",
+              type = "quantitative") |>
+  vl_encode_x(field = "date",
+              type = "ordinal",
+              timeUnit = "yearmonth") |>
+  vl_add_properties(width = 300) |>
+  vl_encode_color(value = "yellow")
+#unmet_demand
+```
+```{r}
+#I know this is a roundabout way but I cant figure anything else out
+row1 <- vl_hconcat(DCNextBar, DCLine)
+row2 <- vl_hconcat(DCLayerBar, DUnDBar)
+row3 <- vl_hconcat(DC_Complete, unmet_demand)
+fullGraphic <- vl_vconcat(row1, row2, row3)
+fullGraphic
+DUnDBar
+```
+## Exercise 2
+
+#### a
+
+```{r}
+jobs_url <- 
+  "https://cdn.jsdelivr.net/npm/vega-datasets@2.8.0/data/jobs.json"
+
+perc_chart <- vl_chart() |>
+  vl_add_data_url(jobs_url) |>
+  vl_mark_bar() |>
+  vl_encode_x(field = "year",
+              type = "ordinal") |>
+  vl_encode_y(field = "perc",
+              type = "quantitative") |>
+  vl_encode_color(field = "sex",
+                  type = "nominal")
+
+perc_chart
+
+```
+From this graphic we can tell that perc is the percent of jobs held in the dataset by sex and field. We can see this because for each year the perc amounts sum up of 1.00 or 100%
+
+#### b
+```{r}
+perc_chart_facet <- vl_chart() |>
+  vl_add_data_url(jobs_url) |>
+  vl_mark_point() |>
+  vl_filter("datum.year == '1850' | datum.year == '1900' | datum.year == '1950' | datum.year == '2000'") |>
+  vl_encode_x(field = "perc",
+              type = "quantitative") |>
+  vl_axis_x(format= ".0%") |>
+  vl_encode_y(field = "job",
+              type = "nominal",
+              title = "") |>
+  vl_encode_color(field = "sex",
+                  type = "nominal") |>
+  vl_facet(field = "year",
+           type = "nominal",
+           columns = 2) |>
+  vl_add_properties(height = 500,
+                    title = "Percent of Workers by Job in 50 Year Incriments")
+
+perc_chart_facet
+```
+
+### c
+
+```{r}
+job_perc <- vl_chart() |>
+  vl_add_data_url(jobs_url) |>
+  vl_mark_point() |>
+  vl_filter("datum.year == '1850' | datum.year == '1900' | datum.year == '1950' | datum.year == '2000'") |>
+  vl_encode_x(field = "perc",
+              type = "quantitative") |>
+  vl_axis_x(format= ".0%") |>
+  vl_encode_y(field = "job",
+              type = "nominal",
+              title = "") |>
+  vl_encode_color(field = "sex",
+                  type = "nominal") |>
+  vl_facet(field = "year",
+           type = "nominal",
+           columns = 2) |>
+  vl_add_properties(height = 500,
+                    title = "Percent of Workers by Job in 50 Year Incriments")
+
+job_perc
+```
+
+### exercise 3
+
+data wrangling
+```{r}
+pump_price <- read.csv("pump_price_for_gasoline_us_per_liter.csv", check.names = FALSE)
+
+CCodes <- read.csv("https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv")
+
+long_pump <- pump_price |>
+  mutate(across(`1991`:`2016`, as.numeric)) |>
+  pivot_longer(
+    cols = !country, 
+    names_to = "year", 
+    values_to = "price"
+  )
+
+long_pump <- long_pump |>
+  inner_join(CCodes, by = c("country" = "name"))
+
+
+```
+graphic
+```{r}
+gas_price_byRegion <- vl_chart() |>
+  vl_calculate("datetime(datum.year, 0 , 1)", as = "year") |>
+  vl_calculate("timeOffset('day', datum.year, 400 * random() - 200)", as = "jyear") |>
+  vl_mark_point() |>
+  vl_add_data(long_pump) |>
+  vl_encode_x(field = "jyear",
+              type = "temporal",
+              title = "") |>
+  vl_encode_xOffset() |>
+  vl_encode_y(field = "price",
+              type = "quantitative",
+              title = "Price (USD$/Liter)") |>
+  vl_encode_color(field = "sub.region",
+                  type = "nominal",
+                  title = "Sub Region") |>
+  vl_add_properties(title = "Gas Prices by Global Sub-Region",
+                    width = 500) |>
+  vl_add_point_selection( 
+    "sub_region_param", bind = "legend", encodings = list("color")) |>
+  vl_encode_opacity(value = 0.2) |>
+  vl_condition_opacity(param = "sub_region_param", value = 1)
+gas_price_byRegion
+```
