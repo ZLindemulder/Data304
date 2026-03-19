@@ -125,7 +125,7 @@ DUnDBar <- vl_chart() |>
     sort = c("capacity", "unmet_demand")) |>
   vl_add_properties(width = 300)
 
-DUnDBar
+#DUnDBar
 
 ```
 ```{r}
@@ -176,7 +176,7 @@ row2 <- vl_hconcat(DCLayerBar, DUnDBar)
 row3 <- vl_hconcat(DC_Complete, unmet_demand)
 fullGraphic <- vl_vconcat(row1, row2, row3)
 fullGraphic
-DUnDBar
+#DUnDBar
 ```
 ## Exercise 2
 

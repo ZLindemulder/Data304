@@ -10,6 +10,10 @@ code-tools: true
 ```{r}
 library(tidyverse)
 library(vegabrite)
+library(stringr)
+library(jsonlite)
+library(altair)
+vega_data <- import_vega_data()
 ```
 
 ## Exercise 1
@@ -55,33 +59,182 @@ When we compare DNA kits across many pairs of twins we find a few interesting tr
 pair_out <- twin_gen |> 
   select(!twin) |>
   pivot_wider(names_from = "id", values_from = "genetic.share")
+pair_out <-pair_out |>
+  mutate(TwinDif = A - B)
 ```
 ```{r}
-pair_compare_point <- vl_chart() |>
-  vl_add_data(twin_gen) |>
-  vl_mark_point()|>
-  vl_encode_y(field = "genetic.share",
-              type = "quantitative") |>
-  vl_encode_shape(field = "id",
-                  type = "nominal") |>
-  vl_encode_color(field = "id",
-                  type = "nominal")
-pair_compare_rule <- vl_chart() |>
+twin_compare <- vl_chart() |>
+  vl_mark_bar(size = 10) |>
   vl_add_data(pair_out) |>
-  vl_mark_rule() |>
-  vl_encode_y(field = "A",
-              type = "quantitative") |>
-  vl_encode_y2(field = "B",
-               type = "quantitative")
-
-  
-pair_compare <- vl_layer(pair_compare_point, pair_compare_rule) |>
   vl_encode_x(field = "region",
-              type = "nominal") |>
-  vl_add_point_selection("CylPair",  fields = c("pair")) |>
-  vl_bind_range_input("CylPair", "pair", min = 1, max = 6, step = 1)
-
-pair_compare
-
-
+              type = "nominal",
+              title = "") |>
+  vl_encode_y(field = "TwinDif",
+              type = "quantitative") |>
+  vl_encode_color(field = "region",
+                  type = "nominal") |>
+  vl_facet_column(field = "kit",
+           type = "nominal") |>
+  vl_facet_row(field = "pair",
+                  type = "nominal") |>
+  vl_axis_y(format= ".0%",
+            title = "Genetic Difference (A - B)") |>
+  vl_axis_x(labels = FALSE, ticks = FALSE) |>
+  vl_add_properties(title = "How Different are Twins' Heritage According to DNA Tests?")
+  twin_compare
 ```
+#### d2.
+
+In this graphic we see some interesting trends. First, if twins DNA are perfectly alike then we know that the Ancestry kit is the most accurate since it did not detect a difference between twins in most cases. Twin A is interesting because 2 tests show the same difference (to varying amounts) in their heritage. Another interesting observation is that it does not seem like all the differences cancel out, meaning there must be a hidden inconclusive category in the data. Another interesting tidbit is that it is clear that East Asian genes are the most similar since the was very little difference between twins in this region.
+
+## Exercise 2
+```{r}
+touchpoints <- read.csv("swd-lets-practice-ex-5-03.csv")
+touchpoints_long <- touchpoints |>
+  pivot_longer(!Date, names_to = "touchpoint", values_to = "rate")
+  touchpoints_long$touchpoint <- str_remove(touchpoints_long$touchpoint, ".Touchpoints")
+```
+```{r}
+touchpoint_rate <- vl_chart() |>
+  vl_add_data(touchpoints_long) |>
+  vl_mark_line(point = TRUE) |>
+  vl_encode_x(field = "Date",
+              type = "temporal",
+              title = "") |>
+  vl_axis_x(ticks = FALSE,
+            grid = FALSE) |>
+  vl_encode_y(field = "rate",
+              type = "quantitative",
+              title = "Response Rate") |>
+  vl_axis_y(grid = FALSE) |>
+  vl_encode_color(field = "touchpoint",
+                  type = "nominal",
+                  sort = c("Email", "Phone", "chat"))|>
+  vl_add_properties(width = 400,
+                    title = "Response Rate of Touchpoints Over Time") 
+touchpoint_rate
+```
+One major error with the original graphic is the total disconnect between the graphic and the text saying total touch points have increased between each year. Looking at the raw data I do not even see it there. Because of this I chose to tell a different, but just as impactful story. This graphic, instead of showing total touchpoints, displays the shift in what touchpoints are most successful. It shows that chat touchpoints have been increasing over time while phone touchpoints have been less successful.
+
+## Exercise 3
+
+[data](Tanzania-DHS.csv)
+```{r}
+Tanzenia <- read.csv("Tanzania-DHS.csv")
+```
+```{r}
+health <- vl_chart() |>
+  vl_chart(width = 120, height = 120) |>
+  vl_add_data(Tanzenia) |>
+  vl_mark_circle() |>
+  vl_encode_x(field = list("repeat" = "column"), type = "quantitative") |>
+  vl_encode_y(field = list("repeat" = "row"), type = "quantitative") |>
+  vl_repeat_row("total_fertility", "contraception_use", "unmet_need") |>
+  vl_repeat_col("unmet_need", "contraception_use", "total_fertility") |>
+  vl_add_properties(title = "How 3 Key Maternity Health Statistics Relate Over 24 Years") |>
+  vl_axis_y(grid = FALSE) |>
+  vl_axis_x(grid = FALSE) |>
+   vl_add_interval_selection("brush", 
+                             resolve = "global") |>
+  vl_encode_color(value = "grey") |>
+  vl_condition_color(param = "brush", 
+                     field = "X", 
+                     type = "Nominal",
+                     title = "Data Collected")
+health
+```
+
+#### The Story
+This graphic helps the reader understand how each variable effects other variables in maternal health. What we can see here is that contraception use and unmet need both have inverse relationship with total fertility. An interactive box being drawn helps the user tell what points are the same across the 9 graphs.
+
+For multi-year data collection rows I decided to simply make 2 years with each row having the same data since the data for the 2 years has to be the average of the data of each of the 2 years.
+
+## exercise 4
+
+```{r}
+us_map_url <- vega_data$world_110m$url
+state_map <-
+  vl_chart(projection = list()) |>
+  vl_add_data(
+    url = us_map_url, 
+    format = list(type = "topojson", feature = "countries")) |>
+  vl_mark_geoshape(fill = "transparent", stroke = "grey", opacity = 0.5) 
+
+earthquakes <- fromJSON("https://cdn.jsdelivr.net/npm/vega-datasets@1.29.0/data/earthquakes.json", simplifyVector = TRUE)
+quakes_df <- as.data.frame(earthquakes$features$properties)
+coords <- as.data.frame(earthquakes$features$geometry$coordinates)
+rownames(coords) <- c("longitude", "latitude", "depth")
+coords <- as.data.frame(t(coords))
+
+quakes_final <- cbind(quakes_df, coords)
+
+quake_map <- vl_chart(projection = list()) |>
+  vl_add_data(quakes_final) |>
+  vl_mark_point(opacity = 1, color = "red", tooltip = TRUE) |>
+  vl_encode_latitude(field ='latitude',
+                     type = 'quantitative') |>
+  vl_encode_longitude(field = "longitude",
+                      type = "quantitative") |>
+  vl_encode_size(field = "felt",
+                 type = "quantitative",
+                 title = "Number of Reports") |>
+  vl_encode_tooltip_array(c("mag:Q", "place:N", "felt:N"))
+fullmap <- vl_layer(state_map + quake_map) |>
+  vl_config_legend(orient = "top") |>
+  vl_add_properties(width = 750, height = 450, title = "Earthquakes Reportedly Felt Across the World")
+fullmap
+```
+#### b.
+
+When I decided to display earthquake data, it seemed natural to use a geoshape as the base of the graphic. While I could have used a different type of mark, It would end up not being able to show the spacial distrobution of earthquakes across the world. I also decided to use the point mark with size being related to the number of people who felt the earthquake to prevent the map from looking like a big blob of red since there are many earthquakes that are not reportedly felt. The point mark also helps show if there was a bigger and smaller earthquake in roughly the same space since the circle is transparent. Using the tool tips I was able to include all data that I thought was useful to know about these earthquakes.
+
+#### c.
+
+All data was taken from vegalight datasets. (World 110m and earthquakes.json)
+
+## Exercise 5
+
+#### a.
+
+All graphics
+
+#### b.
+
+Exercise 4
+
+#### c.
+
+Exercise 1: c and d
+
+#### d.
+
+Exercise 3
+
+#### e.
+
+In all but exercise 1 I modified the guide in some way
+
+#### f.
+
+Exercise 4
+
+#### g.
+
+Exercise 3
+
+## Exercise 6.
+
+#### a.
+
+I learned how to use and then made my masterpiece using the geoshape mark, which we didn't go over in a class. All my other learning was in the data wrangling steps (for which I used DLPYR or other libraries because I find them easier than doing in vegabright). For exercise 4 I learned how to do some more complex modifications os a geoshape into a workable dataframe, and for exercise 2 I learned how to modify a column of data to remove part of a string the a column.
+
+#### b.
+
+Tufte talks a lot about not wasting space in graphics, I embraced this idea in exercise 1 section d. I completely changed my graphic idea when I realized how much space I was wasting by using a point mark and decided to use to data wrangling to graph the difference between the twins heritage rather than graphing each twins heritage individually next to each other. (Tufte 30)
+
+In Exercise 1 I used Healy's idea of faceting to create smaller visuals to prevent unperceivable blobs of data when I broke out the DNA test kits and Twin id into facets rather than keeping them in 1 graphic. (Healy ch4)
+
+In Exercises 1 and 2 I used color as a tool to distinguish as Wilke describes in chapter 4 of his online book. This allows the reader to easily distinguish what data is for what easily and without confusion.
+
+
+
